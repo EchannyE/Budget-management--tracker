@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import authRoute from './routes/authRoute.js';
 import dashboardRoute from './routes/dashboardRoute.js';
+import expensesRoute from './routes/expensesRoute.js';
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get('/', (req, res) => {
 // routes
 app.use('/api/auth', authRoute);
 app.use('/api/dashboard', dashboardRoute)
+app.use('/api/expenses', expensesRoute);
 
 
 

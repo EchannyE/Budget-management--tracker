@@ -39,7 +39,7 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const accessToken = createAccessToken(user);
@@ -50,9 +50,11 @@ export const login = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'Strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       })
-      .json({ token: accessToken, user });
+      .json({ token: accessToken, 
+        user
+       });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: error.message });
   }

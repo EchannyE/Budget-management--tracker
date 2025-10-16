@@ -21,3 +21,10 @@
 //     }
 
 // }
+// "amount": "8000",
+ 
+//   "category": ""
+
+//  "name": "John Doe",
+//     "email": "johndoe@gmail.com",
+//     "phone": "07085236941",
