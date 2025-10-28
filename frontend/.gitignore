@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# build output
+dist/
+build/
+
+# local env files
+.env
+.env.local
+.env.*.local
+
+# system files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.log

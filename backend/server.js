@@ -5,7 +5,10 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import authRoute from './routes/authRoute.js';
 import dashboardRoute from './routes/dashboardRoute.js';
-import expensesRoute from './routes/expensesRoute.js';
+import transactionRoute from './routes/transactionRoute.js';
+import statRoute from './routes/statRoute.js';
+import budgetRoute from './routes/budgetRoute.js';
+import emailRoute from './routes/emailRoute.js';
 
 const app = express();
 
@@ -30,7 +33,10 @@ app.get('/', (req, res) => {
 // routes
 app.use('/api/auth', authRoute);
 app.use('/api/dashboard', dashboardRoute)
-app.use('/api/expenses', expensesRoute);
+app.use('/api/transaction', transactionRoute);
+app.use('/api/stats', statRoute);
+app.use('/api/budget', budgetRoute);
+app.use('/api/send', emailRoute);
 
 
 

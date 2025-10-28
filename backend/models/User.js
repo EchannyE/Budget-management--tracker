@@ -27,6 +27,26 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false, 
     },
+
+    budgets: [
+      
+      {
+        category: { type: String, required: true },
+        limit: { type: Number, required: true },
+        period: { type: String, enum: ['weekly', 'monthly', 'yearly', 'custom'], default: 'monthly' },
+        startDate: { type: Date, default: Date.now },
+        endDate: { type: Date },
+        isActive: { type: Boolean, default: true },
+      },
+
+    ],
+
+    Transactions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Transaction",
+      },
+    ],
     preferences: {
       currency: {
       type: String,

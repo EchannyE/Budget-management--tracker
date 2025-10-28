@@ -1,23 +1,36 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import { createAccessToken, createRefreshToken } from '../utils/tokenUtils.js';
-import bcrypt from 'bcryptjs';
 
-// POST /auth/register
+// REGISTER USER
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
+    if (existingUser)
+      return res.status(400).json({ message: 'User already exists' });
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, password: hashedPassword });
 
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    // Create and save new user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
 
-    res
+    await newUser.save();
+
+    // Generate tokens
+    const accessToken = createAccessToken(newUser);
+    const refreshToken = createRefreshToken(newUser);
+
+    // Send cookies + response
+    return res
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -25,56 +38,85 @@ export const register = async (req, res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
-      .json({ token: accessToken, user });
+      .json({
+        message: 'Registration successful',
+        token: accessToken,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+        },
+      });
   } catch (error) {
-    res.status(500).json({ message: 'Registration failed', error: error.message });
+    console.error('Registration error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Registration failed', error: error.message });
   }
 };
 
-// POST /auth/login
+// LOGIN USER
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    // Find user and include password field
+    const user = await User.findOne({ email }).select('+password');
+    if (!user)
+      return res.status(400).json({ message: 'Invalid credentials (email)' });
 
-    const isMatch = bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: 'Invalid credentials (password)' });
 
+    // Generate tokens
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
-    res
+    return res
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'Strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ token: accessToken, 
-        user
-       });
+      .status(200)
+      .json({
+        message: 'Login successful',
+        token: accessToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
   } catch (error) {
-    res.status(500).json({ message: 'Login failed', error: error.message });
+    console.error('Login error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Login failed', error: error.message });
   }
 };
 
-// POST /auth/refresh-token
+// REFRESH ACCESS TOKEN
 export const refreshAccessToken = (req, res) => {
   const token = req.cookies.refreshToken;
-  if (!token) return res.status(401).json({ message: 'No refresh token provided' });
+  if (!token)
+    return res.status(401).json({ message: 'No refresh token provided' });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const accessToken = createAccessToken({ _id: decoded.id });
-    res.json({ token: accessToken });
+    return res.json({ token: accessToken });
   } catch (err) {
-    res.status(403).json({ message: 'Invalid refresh token' });
+    console.error('Refresh token error:', err);
+    return res.status(403).json({ message: 'Invalid refresh token' });
   }
 };
 
-// POST /auth/logout
+// LOGOUT USER
 export const logout = (req, res) => {
-  res.clearCookie('refreshToken').json({ message: 'Logged out successfully' });
+  res.clearCookie('refreshToken');
+  return res.json({ message: 'Logged out successfully' });
 };
