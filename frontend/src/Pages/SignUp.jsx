@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/apiServices';
-// --- Lucide Icons ---
 import { UserPlus, Loader2, User, Mail, Lock } from 'lucide-react'; 
 
 const SignUp = () => {
@@ -18,7 +17,7 @@ const SignUp = () => {
   setError(""); 
 
   try {
-    await authService.register({ name, email, password }); // ✅ FIXED
+    await authService.register({ name, email, password }); 
     console.log('Signup successful! Redirecting to login.');
     navigate('/login', { replace: true });
   } catch (err) {
