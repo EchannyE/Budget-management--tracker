@@ -8,7 +8,6 @@ import SignUp from './Pages/SignUp';
 import Dashboard from './Pages/Dashboard';
 import Budget from './Pages/Budget';
 import TransactionTable from './Pages/TransactionTable';
-import './App.css';
 
 
 
