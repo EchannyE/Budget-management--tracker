@@ -1,44 +1,46 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import { ErrorResponse } from '../middleware/errorHandler.js';
 import { createAccessToken, createRefreshToken } from '../utils/tokenUtils.js';
 
-// REGISTER USER
-export const register = async (req, res) => {
+//  Register a new user
+ 
+export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
-    // Check if user already exists
+    // Check for existing user
     const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: 'User already exists' });
+    if (existingUser) {
+      return next(new ErrorResponse('User already exists', 400));
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create and save new user
-    const newUser = new User({
+    // Create new user
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    await newUser.save();
-
     // Generate tokens
     const accessToken = createAccessToken(newUser);
     const refreshToken = createRefreshToken(newUser);
 
-    // Send cookies + response
-    return res
+    // Send cookie + response
+    res
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'Strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       })
       .status(201)
       .json({
+        success: true,
         message: 'Registration successful',
         token: accessToken,
         user: {
@@ -48,33 +50,33 @@ export const register = async (req, res) => {
         },
       });
   } catch (error) {
-    console.error('Registration error:', error);
-    return res
-      .status(500)
-      .json({ message: 'Registration failed', error: error.message });
+    next(error);
   }
 };
 
-// LOGIN USER
-export const login = async (req, res) => {
+//  Login user
+ 
+export const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    // Find user and include password field
+    // Validate user
     const user = await User.findOne({ email }).select('+password');
-    if (!user)
-      return res.status(400).json({ message: 'Invalid credentials (email)' });
+    if (!user) {
+      return next(new ErrorResponse('Invalid email or password', 400));
+    }
 
-    // Compare passwords
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Invalid credentials (password)' });
+    if (!isMatch) {
+      return next(new ErrorResponse('Invalid email or password', 400));
+    }
 
-    // Generate tokens
+    // Tokens
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
-    return res
+    res
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -83,6 +85,7 @@ export const login = async (req, res) => {
       })
       .status(200)
       .json({
+        success: true,
         message: 'Login successful',
         token: accessToken,
         user: {
@@ -92,31 +95,35 @@ export const login = async (req, res) => {
         },
       });
   } catch (error) {
-    console.error('Login error:', error);
-    return res
-      .status(500)
-      .json({ message: 'Login failed', error: error.message });
+    next(error);
   }
 };
 
-// REFRESH ACCESS TOKEN
-export const refreshAccessToken = (req, res) => {
+//  Refresh access token
+ 
+export const refreshAccessToken = (req, res, next) => {
   const token = req.cookies.refreshToken;
-  if (!token)
-    return res.status(401).json({ message: 'No refresh token provided' });
+
+  if (!token) {
+    return next(new ErrorResponse('No refresh token provided', 401));
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const accessToken = createAccessToken({ _id: decoded.id });
-    return res.json({ token: accessToken });
-  } catch (err) {
-    console.error('Refresh token error:', err);
-    return res.status(403).json({ message: 'Invalid refresh token' });
+
+    res.status(200).json({ success: true, token: accessToken });
+  } catch (error) {
+    next(new ErrorResponse('Invalid or expired refresh token', 403));
   }
 };
 
-// LOGOUT USER
+//  Logout user
+ 
 export const logout = (req, res) => {
   res.clearCookie('refreshToken');
-  return res.json({ message: 'Logged out successfully' });
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
 };

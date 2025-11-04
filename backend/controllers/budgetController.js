@@ -1,15 +1,17 @@
 import Budget from "../models/Budget.js";
 import Transaction from "../models/Transaction.js";
 import { checkBudgetLimit } from "../utils/checkBudgetLimit.js";
+import { sendEmail } from "../services/emailService.js";
+import { ErrorResponse } from "../middleware/errorHandler.js";
 
-// Set or update budget for a category
-export const setBudget = async (req, res) => {
+//  Set or update a budget for a category
+export const setBudget = async (req, res, next) => {
   try {
     const { category, limit } = req.body;
     const userId = req.user.id;
 
     if (!category || !limit) {
-      return res.status(400).json({ message: "Category and limit are required" });
+      return next(new ErrorResponse("Category and limit are required", 400));
     }
 
     let budget = await Budget.findOne({ user: userId, category });
@@ -23,23 +25,25 @@ export const setBudget = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: " Budget saved successfully",
+      message: "Budget saved successfully",
       budget,
     });
   } catch (error) {
-    console.error("Error setting budget:", error.message);
-    res.status(500).json({ message: " Error setting budget", error: error.message });
+    next(error);
   }
 };
 
-// add expense to budget (auto-check)
-export const addExpenseToBudget = async (req, res) => {
+//  Add an expense and auto-check budget
+export const addExpenseToBudget = async (req, res, next) => {
   try {
     const { category, amount, description, date } = req.body;
     const userId = req.user.id;
+
     if (!category || !amount) {
-      return res.status(400).json({ message: "Category and amount are required" });
+      return next(new ErrorResponse("Category and amount are required", 400));
     }
+
+    // Create expense transaction
     const transaction = await Transaction.create({
       user: userId,
       type: "expense",
@@ -48,63 +52,76 @@ export const addExpenseToBudget = async (req, res) => {
       description,
       date: date || new Date(),
     });
-    if (spent > Budget.limit) {
-  const overshoot = (spent - Budget.limit).toFixed(2);
 
-  console.log(` Budget exceeded for ${category}! Sending email to ${user.email}...`);
+    // Calculate total spent in this category
+    const totalSpent = await Transaction.aggregate([
+      { $match: { user: userId, category, type: "expense" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]);
 
-  await sendEmail(
-    user.email,
-    " Budget Limit Exceeded",
-    `
+    const spent = totalSpent[0]?.total || 0;
+
+    // Get user budget and info
+    const budget = await Budget.findOne({ user: userId, category });
+    const user = req.user;
+
+    if (budget && spent > budget.limit) {
+      const overshoot = (spent - budget.limit).toFixed(2);
+
+      console.log(`⚠️ Budget exceeded for ${category}. Sending alert to ${user.email}...`);
+
+      await sendEmail(
+        user.email,
+        "Budget Limit Exceeded",
+        `
 Hi ${user.name || "User"},
 
 You've exceeded your budget for the **${category}** category.
 
-- Budget Limit: ₦${Budget.limit.toLocaleString()}
+- Budget Limit: ₦${budget.limit.toLocaleString()}
 - Current Spending: ₦${spent.toLocaleString()}
 - Overshoot: ₦${overshoot.toLocaleString()}
 
 Please review your expenses.
 
 — Budget Tracker Team
-    `
-  );
+        `
+      );
 
-  console.log("Email process completed for:", user.email);
-}
+      console.log(" Budget alert email sent to:", user.email);
+    }
 
-    // Check and update budget limit
+    // Verify and update budget status
     await checkBudgetLimit(userId, category);
+
     res.status(201).json({
       success: true,
-      message: " Expense added successfully",
+      message: "Expense added successfully",
       transaction,
     });
   } catch (error) {
-    console.error("Error adding expense to budget:", error.message);
-    res.status(500).json({ message: " Error adding expense to budget", error: error.message });
+    next(error);
   }
 };
 
-// Get all budgets for user
-export const getBudgets = async (req, res) => {
+// Get all budgets for a user
+export const getBudgets = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const budgets = await Budget.find({ user: userId }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      message: " Budgets fetched successfully",
+      message: "Budgets fetched successfully",
       budgets,
     });
   } catch (error) {
-    console.error("Error fetching budgets:", error.message);
-    res.status(500).json({ message: " Error fetching budgets", error: error.message });
+    next(error);
   }
 };
-// Get budget by ID
-export const getBudgetById = async (req, res) => {
+
+//  Get a single budget by ID
+export const getBudgetById = async (req, res, next) => {
   try {
     const budget = await Budget.findOne({
       _id: req.params.id,
@@ -112,7 +129,7 @@ export const getBudgetById = async (req, res) => {
     });
 
     if (!budget) {
-      return res.status(404).json({ message: "Budget not found" });
+      return next(new ErrorResponse("Budget not found", 404));
     }
 
     res.status(200).json({
@@ -120,17 +137,12 @@ export const getBudgetById = async (req, res) => {
       budget,
     });
   } catch (error) {
-    console.error("Error fetching budget:", error.message);
-    res.status(500).json({ message: " Error fetching budget", error: error.message });
+    next(error);
   }
 };
 
-
-
-
 //  Update budget by ID
-
-export const updateBudget = async (req, res) => {
+export const updateBudget = async (req, res, next) => {
   try {
     const { category, limit } = req.body;
 
@@ -141,22 +153,21 @@ export const updateBudget = async (req, res) => {
     );
 
     if (!budget) {
-      return res.status(404).json({ message: "Budget not found" });
+      return next(new ErrorResponse("Budget not found", 404));
     }
 
     res.status(200).json({
       success: true,
-      message: " Budget updated successfully",
+      message: "Budget updated successfully",
       budget,
     });
   } catch (error) {
-    console.error("Error updating budget:", error.message);
-    res.status(500).json({ message: " Error updating budget", error: error.message });
+    next(error);
   }
 };
 
-// Delete budget by ID
-export const deleteBudget = async (req, res) => {
+//  Delete budget by ID
+export const deleteBudget = async (req, res, next) => {
   try {
     const deleted = await Budget.findOneAndDelete({
       _id: req.params.id,
@@ -164,27 +175,26 @@ export const deleteBudget = async (req, res) => {
     });
 
     if (!deleted) {
-      return res.status(404).json({ message: "Budget not found" });
+      return next(new ErrorResponse("Budget not found", 404));
     }
 
     res.status(200).json({
       success: true,
-      message: " Budget deleted successfully",
+      message: "Budget deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting budget:", error.message);
-    res.status(500).json({ message: " Error deleting budget", error: error.message });
+    next(error);
   }
 };
 
-// add expenses
-export const addExpense = async (req, res) => {
+//  Add expense (generic)
+export const addExpense = async (req, res, next) => {
   try {
     const { category, amount, description, date } = req.body;
     const userId = req.user.id;
 
     if (!category || !amount) {
-      return res.status(400).json({ message: "Category and amount are required" });
+      return next(new ErrorResponse("Category and amount are required", 400));
     }
 
     const transaction = await Transaction.create({
@@ -196,18 +206,14 @@ export const addExpense = async (req, res) => {
       date: date || new Date(),
     });
 
-    // Update and verify budget limit
     await checkBudgetLimit(userId, category);
 
     res.status(201).json({
       success: true,
-      message: " Expense added successfully",
+      message: "Expense added successfully",
       transaction,
     });
   } catch (error) {
-    console.error("Error adding expense:", error.message);
-    res.status(500).json({ message: " Error adding expense", error: error.message });
+    next(error);
   }
 };
-
-

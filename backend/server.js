@@ -10,6 +10,9 @@ import statRoute from './routes/statRoute.js';
 import budgetRoute from './routes/budgetRoute.js';
 import emailRoute from './routes/emailRoute.js';
 
+// middleware
+import{ errorHandler} from './middleware/errorHandler.js';
+
 const app = express();
 
 dotenv.config();
@@ -39,6 +42,7 @@ app.use('/api/budget', budgetRoute);
 app.use('/api/send', emailRoute);
 
 
+app.use(errorHandler);
 
 
 // Connect to MongoDB

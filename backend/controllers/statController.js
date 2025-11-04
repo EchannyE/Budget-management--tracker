@@ -1,33 +1,36 @@
 import Transaction from '../models/Transaction.js';
+import { errorHandler } from '../middleware/errorHandler.js';
 
-
-
+//  Get Monthly Spending Stats
 export const getMonthlySpending = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?._id || req.user?.id;
 
-   
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     const stats = await Transaction.aggregate([
       { $match: { user: userId } },
       {
         $group: {
-          _id: { $substr: ['$date', 0, 7] }, 
-          total: { $sum: '$amount' }
-        }
+          _id: { $substr: ['$date', 0, 7] }, // "YYYY-MM"
+          total: { $sum: '$amount' },
+        },
       },
-      {
-        $sort: { _id: 1 }
-      }
+      { $sort: { _id: 1 } },
     ]);
 
-    const formatted = stats.map(item => ({
+    const formattedStats = stats.map((item) => ({
       month: item._id,
-      total: item.total
+      total: item.total,
     }));
 
-    res.json(formatted);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to load spending stats' });
+    res.status(200).json({
+      message: 'Monthly spending stats retrieved successfully',
+      data: formattedStats,
+    });
+  } catch (error) {
+    errorHandler(error, req, res);
   }
 };
-

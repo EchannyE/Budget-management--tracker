@@ -258,7 +258,7 @@ const Budget = () => {
                 <div className="space-y-5">
                     {budgets.length === 0 ? (
                         <div className="text-gray-500 text-center py-10 border-dashed border-2 rounded-xl">
-                            <p className="text-lg font-medium">No budgets set yet. Start by creating one above! 💰</p>
+                            <p className="text-lg font-medium">No budgets set yet. Start by creating one above! </p>
                         </div>
                     ) : (
                         budgets.map((b) => {

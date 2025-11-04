@@ -10,19 +10,19 @@ const Navbar = () => {
     <>
       <Link
         to="/dashboard"
-        className="flex items-center px-3 py-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
       >
         Dashboard
       </Link>
       <Link
         to="/login"
-        className="flex items-center px-3 py-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center px-3 py-2 rounded-md text-gray-700  hover:bg-gray-100 "
       >
         Login
       </Link>
       <Link
         to="/signup"
-        className="flex items-center px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
+        className="flex items-center px-3 py-2 rounded-md bg-indigo-500 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
       >
         Sign Up
       </Link>
