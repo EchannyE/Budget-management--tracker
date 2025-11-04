@@ -53,7 +53,7 @@ const SignUp = () => {
                         <input
                             type="text"
                             placeholder="Full Name"
-                            className="w-full p-3 pl-10 border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                            className="w-full p-3 pl-10 text-black border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required

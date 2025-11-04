@@ -22,7 +22,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/Budget-mgt
 
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL || 'https://budget-management-tracker-seven.vercel.app/', credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
