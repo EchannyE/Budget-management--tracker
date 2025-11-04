@@ -24,7 +24,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
-import cors from 'cors';
 
 const allowedOrigins = [
   "http://localhost:5173", 
