@@ -1,4 +1,4 @@
-# 💰 Budget Management Tracker
+# Budget Management Tracker
 
 The Budget Management Tracker Application is a system that allows users to manage their finances efficiently. It enables authenticated users to record, categorize, and visualize their expenses and income. The backend is built with Node.js, Express.js, and MongoDB, while the frontend is developed in React.js for a seamless user experience.
 
@@ -55,7 +55,7 @@ Copy code
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 | Layer | Technologies Used |
 |-------|--------------------|
