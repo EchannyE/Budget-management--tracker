@@ -53,14 +53,6 @@ app.use('/api/stats', statRoute);
 app.use('/api/budget', budgetRoute);
 app.use('/api/send', emailRoute);
 
-// ✅ Serve frontend build (React/Vite dist folder)
-const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
-
-// ✅ Wildcard route (Express 5 compatible)
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
 
 // Error handler
 app.use(errorHandler);
