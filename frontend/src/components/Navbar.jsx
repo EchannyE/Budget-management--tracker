@@ -1,35 +1,45 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, LogOut, UserPlus, LogIn } from 'lucide-react';
+import { Menu, X } from 'lucide-react'; 
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  
+  const handleLinkClick = () => {
+    setIsOpen(false);
+  };
 
-  const navLinks =
+  const navLinks = (
     <>
       <Link
         to="/dashboard"
-        className="flex items-center px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
+        className="flex items-center px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+        onClick={handleLinkClick}
       >
         Dashboard
       </Link>
+
+      
       <Link
         to="/login"
-        className="flex items-center px-3 py-2 rounded-md text-gray-700  hover:bg-gray-100 "
+        className="flex items-center px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+        onClick={handleLinkClick}
       >
         Login
       </Link>
+
+      {/* Highlighted Sign Up Link (Consistent styling for both desktop and mobile) */}
       <Link
         to="/signup"
-        className="flex items-center px-3 py-2 rounded-md bg-indigo-500 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
+        // Use a clearer margin/spacing on desktop (md:ml-4)
+        className="flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors shadow-md md:ml-4"
+        onClick={handleLinkClick}
       >
         Sign Up
       </Link>
-
-      
     </>
-  
+  );
 
   return (
     <nav className="bg-white dark:bg-gray-900 shadow sticky top-0 z-50">
@@ -44,15 +54,15 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
             {navLinks}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - IMPROVED UI */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-150"
               aria-label="Toggle menu"
               aria-expanded={isOpen}
             >
@@ -62,11 +72,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - IMPROVED TRANSITION */}
       <div
-        className={`md:hidden bg-white dark:bg-gray-900 shadow-md overflow-hidden transition-transform duration-300 ${isOpen ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none" }`}
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+        }`}
       >
-        <div className="px-2 pt-2 pb-3 space-y-1 flex flex-col justify-center">{navLinks}</div>
+        {/* Added a border top for visual separation */}
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 pt-2 pb-4 space-y-2 flex flex-col">
+          {navLinks}
+        </div>
       </div>
     </nav>
   );
