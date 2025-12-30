@@ -49,14 +49,13 @@ const userSchema = new mongoose.Schema(
     ],
     preferences: {
       currency: {
-      type: String,
-      default: 'NGN'
+        type: String,
+        default: 'NGN'
+      },
     },
-     
-    },
-    
-    
-    
+    // For password reset
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   { timestamps: true }
 );

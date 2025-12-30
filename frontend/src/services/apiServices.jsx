@@ -29,6 +29,16 @@ export const authService = {
     return res.data;
   },
 
+  forgotPassword: async (email) => {
+    const res = await api.post("/auth/forgot-password", { email });
+    return res.data;
+  },
+
+  resetPassword: async (token, newPassword) => {
+    const res = await api.post(`/auth/reset-password/${token}`, { password: newPassword });
+    return res.data;
+  },
+
   getProfile: async () => {
     const res = await api.get("/dashboard");
     return res.data;
@@ -137,4 +147,5 @@ export default {
   transactionService,
   budgetService,
   statsService,
+  
 };

@@ -1,92 +1,48 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
-import { ErrorResponse } from '../middleware/errorHandler.js';
-import { createAccessToken, createRefreshToken } from '../utils/tokenUtils.js';
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import { sendEmail } from "../services/emailService.js";
+import { ErrorResponse } from "../middleware/errorHandler.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+} from "../utils/tokenUtils.js";
 
-//  Register a new user
- 
+/* ================================
+   REGISTER
+================================ */
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
-    // Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return next(new ErrorResponse('User already exists', 400));
+      return next(new ErrorResponse("User already exists", 400));
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
-    const newUser = await User.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    // Generate tokens
-    const accessToken = createAccessToken(newUser);
-    const refreshToken = createRefreshToken(newUser);
-
-    // Send cookie + response
-    res
-      .cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
-      })
-      .status(201)
-      .json({
-        success: true,
-        message: 'Registration successful',
-        token: accessToken,
-        user: {
-          id: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-        },
-      });
-  } catch (error) {
-    next(error);
-  }
-};
-
-//  Login user
- 
-export const login = async (req, res, next) => {
-  const { email, password } = req.body;
-
-  try {
-    // Validate user
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return next(new ErrorResponse('Invalid email or password', 400));
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return next(new ErrorResponse('Invalid email or password', 400));
-    }
-
-    // Tokens
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
     res
-      .cookie('refreshToken', refreshToken, {
+      .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Strict',
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .status(200)
+      .status(201)
       .json({
         success: true,
-        message: 'Login successful',
+        message: "Registration successful",
         token: accessToken,
         user: {
           id: user._id,
@@ -99,13 +55,153 @@ export const login = async (req, res, next) => {
   }
 };
 
-//  Refresh access token
- 
+/* ================================
+   LOGIN
+================================ */
+export const login = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return next(new ErrorResponse("Invalid email or password", 400));
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next(new ErrorResponse("Invalid email or password", 400));
+    }
+
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
+
+    res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "Login successful",
+        token: accessToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================================
+   FORGOT PASSWORD
+================================ */
+export const forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new ErrorResponse("No user found with that email", 404));
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = resetTokenHash;
+    user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 mins
+
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    }/reset-password/${resetToken}`;
+
+    const message = `
+      <p>You requested a password reset.</p>
+      <p>
+        <a href="${resetUrl}" target="_blank">Click here to reset your password</a>
+      </p>
+      <p>If you did not request this, please ignore this email.</p>
+    `;
+
+    try {
+      await sendEmail(user.email, "Password Reset Request", message);
+    } catch (emailError) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      return next(new ErrorResponse("Email could not be sent", 500));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset link sent to email",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================================
+   RESET PASSWORD
+================================ */
+export const resetPassword = async (req, res, next) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password || password.length < 6) {
+    return next(
+      new ErrorResponse("Password must be at least 6 characters", 400)
+    );
+  }
+
+  try {
+    const resetTokenHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: resetTokenHash,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(new ErrorResponse("Invalid or expired token", 400));
+    }
+
+    user.password = await bcrypt.hash(password, 12);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================================
+   REFRESH TOKEN
+================================ */
 export const refreshAccessToken = (req, res, next) => {
   const token = req.cookies.refreshToken;
 
   if (!token) {
-    return next(new ErrorResponse('No refresh token provided', 401));
+    return next(new ErrorResponse("No refresh token provided", 401));
   }
 
   try {
@@ -114,16 +210,17 @@ export const refreshAccessToken = (req, res, next) => {
 
     res.status(200).json({ success: true, token: accessToken });
   } catch (error) {
-    next(new ErrorResponse('Invalid or expired refresh token', 403));
+    next(new ErrorResponse("Invalid or expired refresh token", 403));
   }
 };
 
-//  Logout user
- 
+/* ================================
+   LOGOUT
+================================ */
 export const logout = (req, res) => {
-  res.clearCookie('refreshToken');
-  return res.status(200).json({
+  res.clearCookie("refreshToken");
+  res.status(200).json({
     success: true,
-    message: 'Logged out successfully',
+    message: "Logged out successfully",
   });
 };

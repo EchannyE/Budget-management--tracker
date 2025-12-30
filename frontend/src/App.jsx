@@ -8,6 +8,8 @@ import SignUp from './Pages/SignUp';
 import Dashboard from './Pages/Dashboard';
 import Budget from './Pages/Budget';
 import TransactionTable from './Pages/TransactionTable';
+import ForgotPassword from './Pages/ForgotPassword';
+import ResetPassword from './Pages/ResetPassword';
 
 
 
@@ -26,6 +28,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/transactionTable" element={<TransactionTable />} />
             <Route path="/budget" element={<Budget />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Routes>
         </main>
         <Footer />
