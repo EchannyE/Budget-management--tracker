@@ -3,32 +3,68 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export const sendEmail = async (to, subject, message) => {
-  try {
-    console.log(`Preparing to send email to: ${to}`);
+export const sendEmail = async (to, subject, htmlMessage) => {
+  let transporter;
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, 
+  try {
+    /* ============================
+       DEVELOPMENT (ETHEREAL)
+    ============================ */
+    if (process.env.NODE_ENV !== "production") {
+      console.log("📧 Email Mode: DEVELOPMENT (Ethereal)");
+
+      const testAccount = await nodemailer.createTestAccount();
+
+      transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+
+      const info = await transporter.sendMail({
+        from: `"Budget Tracker" <${testAccount.user}>`,
+        to,
+        subject,
+        html: htmlMessage,
+      });
+
+      console.log("✅ Email accepted by Ethereal");
+      console.log("🔗 Preview URL:", nodemailer.getTestMessageUrl(info));
+      return;
+    }
+
+    /* ============================
+       PRODUCTION (SENDGRID)
+    ============================ */
+    console.log("📧 Email Mode: PRODUCTION (SendGrid)");
+
+    transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: Number(process.env.EMAIL_PORT),
+      secure: process.env.EMAIL_SECURE === "true",
       auth: {
-        user: process.env.EMAIL_USER,
+        user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS, 
       },
-      tls: {
-        rejectUnauthorized: false,
-      },
     });
+
+    await transporter.verify();
+    console.log("✅ SMTP connection verified");
 
     await transporter.sendMail({
-      from: `"Budget Tracker" <${process.env.EMAIL_USER}>`,
+      from: process.env.EMAIL_FROM, 
       to,
       subject,
-      html: message,
+      html: htmlMessage,
     });
 
-    console.log(`Email sent successfully to ${to}`);
+    console.log(`✅ Email successfully sent to ${to}`);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("❌ Email sending failed");
+    console.error(error);
+    throw new Error("Email could not be sent");
   }
 };

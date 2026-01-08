@@ -257,7 +257,7 @@ const handleCreateTransaction = async (e) => {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4 border-gray-200">
         <h1 className="text-4xl font-extrabold text-gray-900">Transaction Ledger</h1>

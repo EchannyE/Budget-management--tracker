@@ -28,7 +28,6 @@ const INITIAL_SUMMARY_STATE = {
 
 // --- Helper Components ---
 
-  // Improved Edit Profile Modal
 
 
 const EditProfileModal = ({ editMode, setEditMode, form, setForm, handleUpdateProfile, alert }) => {
@@ -121,7 +120,7 @@ const EditProfileModal = ({ editMode, setEditMode, form, setForm, handleUpdatePr
 };
 
 
-//  Improved Profile Card
+// Profile Card
  
  
 const ProfileCard = ({ user, setEditMode, handleLogout }) => (
@@ -164,7 +163,7 @@ const QuickActionsCard = ({ navigate }) => (
         </h2>
         <div className="grid grid-cols-2 gap-4">
             {[
-                { label: "New Transaction", icon: CreditCard, path: "/transaction/new", color: "text-blue-600", bg: "bg-blue-50" },
+                { label: "New Transaction", icon: CreditCard, path: "/transactionTable", color: "text-blue-600", bg: "bg-blue-50" },
                 { label: "Set Budget", icon: DollarSign, path: "/budget", color: "text-indigo-600", bg: "bg-indigo-50" },
                 { label: "View Reports", icon: BarChart2, path: "/reports", color: "text-purple-600", bg: "bg-purple-50" },
                 { label: "View All", icon: Wallet, path: "/transactionTable", color: "text-orange-600", bg: "bg-orange-50" },
@@ -295,7 +294,7 @@ const Dashboard = () => {
 
   // --- Main Render ---
   return (
-    <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto bg-gray-50 min-h-screen space-y-10">
+    <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto  min-h-screen space-y-10">
       
       <EditProfileModal
         editMode={isEditMode}
@@ -376,9 +375,9 @@ const Dashboard = () => {
               )}
             </div>
           ) : (
-            <div className="text-center bg-gray-50 border-2 border-dashed border-gray-200 p-8 rounded-xl h-full flex flex-col justify-center items-center">
-              <DollarSign className="w-10 h-10 text-orange-400 mx-auto mb-4" />
-              <p className="text-xl font-bold text-gray-800 mb-4">No Budgets Set</p>
+            <div className="text-center bg-gray-50 border-2 border-dashed border-gray-200 p-8 rounded-xl min-h-[400px] flex flex-col justify-center items-center">
+              <DollarSign className="w-10 h-8 text-orange-400 mx-auto mb-2" />
+              <p className="text-xl font-bold text-gray-800 mb-3">No Budgets Set</p>
               <p className="text-gray-500 mb-6">Start by setting a limit to control your spending!</p>
               <button
                 onClick={() => navigate("/budget")}

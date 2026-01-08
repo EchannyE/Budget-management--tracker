@@ -40,12 +40,12 @@ const CTAButton = ({ to, text, primary = true }) => (
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gray-50 font-sans antialiased">
+    <div className="min-h-screen font-sans antialiased shadow-lg text-gray-900">
       
       {/* 1. Hero Section: The most prominent part */}
       <section className="relative pt-16 pb-32 overflow-hidden">
         {/* Background/Overlay */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-indigo-800 to-purple-900">
+        <div className="absolute inset-0 z-0 bg-gradient-to-br ">
           <img 
             src="/img/hero-finance.png" 
             alt="Budget management hero illustration" 
@@ -74,19 +74,19 @@ const Home = () => {
           
           {/* Subtitle */}
           <p className="text-lg sm:text-xl max-w-3xl mx-auto mb-10 text-indigo-200/90 font-light drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
-            Effortlessly monitor and control your financial life with **smart Budget tracker** and Manage your money, confidently.
+            Effortlessly monitor and control your financial life with smart Budget tracker and Manage your money, confidently.
           </p>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <CTAButton to="/signup" text="Start Your Free Trial" primary={true} />
-            <CTAButton to="/demo" text="Watch a Demo" primary={false} />
+            <CTAButton to="/about" text="Learn More" primary={false} />
           </div>
         </motion.div>
       </section>
       
       {/* 3. Original Features Section (Refined) */}
-      <section className="py-20 md:py-28 bg-gray-50 border-t border-gray-100">
+      <section className="py-20 md:py-28 border border-gray-100">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="text-center mb-16">
                 <h2 className="text-4xl font-extrabold text-gray-900 mb-4">

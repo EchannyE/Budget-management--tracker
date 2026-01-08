@@ -199,7 +199,7 @@ const Budget = () => {
         );
 
     return (
-        <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className="p-6 md:p-10 min-h-screen">
             <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl border-t-4 border-blue-600 p-6">
                 <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3 mb-6">
                     <DollarSign className="text-blue-600 w-7 h-7" /> Budget Management
