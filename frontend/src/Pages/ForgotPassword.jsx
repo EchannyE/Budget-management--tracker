@@ -33,7 +33,7 @@ const ForgotPassword = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-50 rounded-full mb-4">
             <Mail className="w-8 h-8 text-indigo-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Forgot password?</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Forgot password?</h2> 
           <p className="text-gray-500 mt-2">
             No worries, we'll send you reset instructions.
           </p>
